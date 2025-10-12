@@ -2,10 +2,8 @@ using GolfImprovementMeasurement.Models;
 
 namespace GolfImprovementMeasurement.Parsers;
 
-public class CsvParser(DateTime referenceDate) : IGolfDataParser
+public class CsvParser(DateTime referenceDate)
 {
-    private readonly DateTime _referenceDate = referenceDate;
-
     public List<GolfRound> ParseFile(string filePath)
     {
         if (string.IsNullOrWhiteSpace(filePath))
@@ -54,39 +52,27 @@ public class CsvParser(DateTime referenceDate) : IGolfDataParser
             return null;
         }
 
-        try
-        {
-            var dateStr = parts[0].Trim();
-            var roundDate = DateParser.Parse(dateStr);
-            var daysSince = CalculateDaysSinceReference(roundDate);
+        var dateStr = parts[0].Trim();
+        var roundDate = DateParser.Parse(dateStr);
+        var daysSince = CalculateDaysSinceReference(roundDate);
 
-            var shots = int.Parse(parts[1].Trim());
-            var condition = ParseConditionMultiplier(parts[2].Trim());
+        var shots = int.Parse(parts[1].Trim());
+        var condition = ParseConditionMultiplier(parts[2].Trim());
 
-            return new GolfRound
-            {
-                DaysSinceReference = daysSince,
-                NumberOfShots = shots,
-                CourseCondition = condition
-            };
-        }
-        catch (Exception)
+        return new GolfRound
         {
-            // Log or handle parse errors if needed
-            return null;
-        }
+            DaysSinceReference = daysSince,
+            NumberOfShots = shots,
+            CourseCondition = condition
+        };
     }
 
-    private int CalculateDaysSinceReference(DateTime date)
-    {
-        return (int)(date - _referenceDate).TotalDays;
-    }
+    private int CalculateDaysSinceReference(DateTime date) =>
+        (int)(date - referenceDate).TotalDays;
 
-    private static decimal ParseConditionMultiplier(string conditionStr)
-    {
-        // Convert 'x' to 2.0, otherwise parse as decimal
-        return conditionStr.Equals("x", StringComparison.OrdinalIgnoreCase)
+    // Convert 'x' to 2.0, otherwise parse as decimal
+    private static decimal ParseConditionMultiplier(string conditionStr) =>
+        conditionStr.Equals("x", StringComparison.OrdinalIgnoreCase)
             ? 2.0m
             : decimal.Parse(conditionStr);
-    }
 }

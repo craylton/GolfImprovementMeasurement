@@ -7,11 +7,11 @@ using GolfImprovementMeasurement.Services;
 // Configure application
 var configuration = AppConfiguration.Default;
 
-// Create services (in a real application, use dependency injection container)
+// Create services
 var parser = new CsvParser(configuration.ReferenceDate);
 var regressionService = new MultipleLinearRegressionService();
 var displayer = new GolfDataDisplayer();
-var analyzer = new PlayerAnalyzer(regressionService, displayer);
+var analyzer = new CourseAnalyzer(regressionService, displayer);
 
 // Create and run application
 var application = new GolfAnalysisApplication(configuration, parser, analyzer);

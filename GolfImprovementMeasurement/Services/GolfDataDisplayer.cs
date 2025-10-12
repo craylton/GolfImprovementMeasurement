@@ -1,43 +1,32 @@
 using GolfImprovementMeasurement.Models;
-using System;
-using System.Collections.Generic;
-using System.IO;
 
-namespace GolfImprovementMeasurement.Services
+namespace GolfImprovementMeasurement.Services;
+
+public class GolfDataDisplayer(TextWriter output)
 {
-    public class GolfDataDisplayer : IGolfDataDisplayer
+    public GolfDataDisplayer() : this(Console.Out)
     {
-        private readonly TextWriter _output;
+    }
 
-        public GolfDataDisplayer() : this(Console.Out)
+    public void Display(string courseName, IEnumerable<GolfRound> rounds)
+    {
+        if (string.IsNullOrWhiteSpace(courseName))
         {
+            throw new ArgumentException("Course name cannot be null or empty.", nameof(courseName));
         }
 
-        public GolfDataDisplayer(TextWriter output)
+        ArgumentNullException.ThrowIfNull(rounds);
+
+        output.WriteLine($"{courseName} Data:");
+
+        foreach (var round in rounds)
         {
-            _output = output ?? throw new ArgumentNullException(nameof(output));
+            output.WriteLine(
+                $"Days: {round.DaysSinceReference}, " +
+                $"Shots: {round.NumberOfShots}, " +
+                $"Condition: {round.CourseCondition}");
         }
 
-        public void Display(string playerName, IEnumerable<GolfRound> rounds)
-        {
-            if (string.IsNullOrWhiteSpace(playerName))
-            {
-                throw new ArgumentException("Player name cannot be null or empty.", nameof(playerName));
-            }
-
-            ArgumentNullException.ThrowIfNull(rounds);
-
-            _output.WriteLine($"{playerName} Data:");
-
-            foreach (var round in rounds)
-            {
-                _output.WriteLine(
-                    $"Days: {round.DaysSinceReference}, " +
-                    $"Shots: {round.NumberOfShots}, " +
-                    $"Condition: {round.CourseCondition}");
-            }
-
-            _output.WriteLine();
-        }
+        output.WriteLine();
     }
 }

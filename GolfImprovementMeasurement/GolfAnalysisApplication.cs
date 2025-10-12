@@ -1,40 +1,25 @@
 using GolfImprovementMeasurement.Analysis;
 using GolfImprovementMeasurement.Configuration;
 using GolfImprovementMeasurement.Parsers;
-using GolfImprovementMeasurement.Services;
 
 namespace GolfImprovementMeasurement;
 
-/// <summary>
-/// Main application orchestrator for golf improvement measurement analysis
-/// </summary>
-public class GolfAnalysisApplication
+public class GolfAnalysisApplication(
+    AppConfiguration configuration,
+    CsvParser parser,
+    CourseAnalyzer analyzer)
 {
-    private readonly AppConfiguration _configuration;
-    private readonly IGolfDataParser _parser;
-    private readonly PlayerAnalyzer _analyzer;
-
-    public GolfAnalysisApplication(
-        AppConfiguration configuration,
-        IGolfDataParser parser,
-        PlayerAnalyzer analyzer)
-    {
-        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-        _parser = parser ?? throw new ArgumentNullException(nameof(parser));
-        _analyzer = analyzer ?? throw new ArgumentNullException(nameof(analyzer));
-    }
-
     public void Run()
     {
         DisplayHeader();
-        
-        var bhillData = _parser.ParseFile(_configuration.BhillDataPath);
-        var phavenData = _parser.ParseFile(_configuration.PhavenDataPath);
+
+        var bhillData = parser.ParseFile(configuration.BhillDataPath);
+        var phavenData = parser.ParseFile(configuration.PhavenDataPath);
 
         DisplayRegressionAnalysisHeader();
-        
-        _analyzer.AnalyzePlayer("Bhill", bhillData);
-        _analyzer.AnalyzePlayer("Phaven", phavenData);
+
+        analyzer.AnalyzeCourse("Bhill", bhillData);
+        analyzer.AnalyzeCourse("Phaven", phavenData);
 
         DisplayFooter();
     }

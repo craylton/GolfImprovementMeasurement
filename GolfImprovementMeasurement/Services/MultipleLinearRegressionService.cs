@@ -1,16 +1,16 @@
-using GolfImprovementMeasurement.Models;
+﻿using GolfImprovementMeasurement.Models;
 using MathNet.Numerics.LinearAlgebra;
 
 namespace GolfImprovementMeasurement.Services;
 
-public class MultipleLinearRegressionService : IRegressionService
+public class MultipleLinearRegressionService
 {
     private const int MinimumDataPoints = 3;
     private const int NumberOfCoefficients = 3;
 
     /// <summary>
     /// Performs multiple linear regression on golf rounds to find the best-fit plane.
-    /// z = ?? + ??x + ??y
+    /// z = β₀ + β₁x + β₂y
     /// where x = DaysSinceReference, y = CourseCondition, z = NumberOfShots
     /// </summary>
     public RegressionResult FitPlane(List<GolfRound> rounds)
@@ -30,20 +30,20 @@ public class MultipleLinearRegressionService : IRegressionService
     public double Predict(RegressionResult result, int daysSinceReference, decimal courseCondition)
     {
         ArgumentNullException.ThrowIfNull(result);
-        
-        return result.Beta0 + 
-               result.Beta1 * daysSinceReference + 
+
+        return result.Beta0 +
+               result.Beta1 * daysSinceReference +
                result.Beta2 * (double)courseCondition;
     }
 
     /// <summary>
-    /// Calculates the R� (coefficient of determination) for the regression model.
-    /// R� indicates how well the model fits the data (0 to 1, where 1 is perfect fit).
+    /// Calculates the R² (coefficient of determination) for the regression model.
+    /// R² indicates how well the model fits the data (0 to 1, where 1 is perfect fit).
     /// </summary>
     public double CalculateRSquared(List<GolfRound> rounds, RegressionResult result)
     {
         ArgumentNullException.ThrowIfNull(result);
-        
+
         if (rounds == null || rounds.Count == 0)
         {
             return 0;
@@ -60,7 +60,7 @@ public class MultipleLinearRegressionService : IRegressionService
         if (rounds == null || rounds.Count < MinimumDataPoints)
         {
             throw new ArgumentException(
-                $"At least {MinimumDataPoints} data points are required for multiple linear regression.", 
+                $"At least {MinimumDataPoints} data points are required for multiple linear regression.",
                 nameof(rounds));
         }
     }
@@ -93,12 +93,12 @@ public class MultipleLinearRegressionService : IRegressionService
 
     private static Vector<double> CalculateCoefficients(Matrix<double> designMatrix, Vector<double> responseVector)
     {
-        // Apply the Normal Equation: ?? = (X? X)?� X? Y
+        // Apply the Normal Equation: β̂ = (Xᵀ X)⁻¹ Xᵀ Y
         var xTranspose = designMatrix.Transpose();
         var xTransposeX = xTranspose.Multiply(designMatrix);
         var xTransposeXInverse = xTransposeX.Inverse();
         var xTransposeY = xTranspose.Multiply(responseVector);
-        
+
         return xTransposeXInverse.Multiply(xTransposeY);
     }
 
@@ -119,8 +119,8 @@ public class MultipleLinearRegressionService : IRegressionService
     }
 
     private (double TotalSumOfSquares, double ResidualSumOfSquares) CalculateSumOfSquares(
-        List<GolfRound> rounds, 
-        RegressionResult result, 
+        List<GolfRound> rounds,
+        RegressionResult result,
         double meanObserved)
     {
         double totalSumOfSquares = 0;
@@ -130,7 +130,7 @@ public class MultipleLinearRegressionService : IRegressionService
         {
             var observed = round.NumberOfShots;
             var predicted = Predict(result, round.DaysSinceReference, round.CourseCondition);
-            
+
             totalSumOfSquares += Math.Pow(observed - meanObserved, 2);
             residualSumOfSquares += Math.Pow(observed - predicted, 2);
         }
@@ -140,8 +140,8 @@ public class MultipleLinearRegressionService : IRegressionService
 
     private static double CalculateRSquaredValue(double totalSumOfSquares, double residualSumOfSquares)
     {
-        return totalSumOfSquares > 0 
-            ? 1 - (residualSumOfSquares / totalSumOfSquares) 
+        return totalSumOfSquares > 0
+            ? 1 - (residualSumOfSquares / totalSumOfSquares)
             : 0;
     }
 }
