@@ -6,22 +6,22 @@ namespace GolfImprovementMeasurement.Models;
 public class RegressionResult
 {
     /// <summary>
-    /// Intercept (??) - baseline number of shots
+    /// Intercept (baseline number of shots)
     /// </summary>
     public required double Beta0 { get; init; }
 
     /// <summary>
-    /// Coefficient for DaysSinceReference (??) - change in shots per day
+    /// Coefficient for DaysSinceReference (change in shots per day)
     /// </summary>
     public required double Beta1 { get; init; }
 
     /// <summary>
-    /// Coefficient for CourseCondition (??) - change in shots per unit of course condition
+    /// Coefficient for CourseCondition (change in shots per condition unit)
     /// </summary>
     public required double Beta2 { get; init; }
 
     /// <summary>
-    /// Coefficient for CourseMultiplier (??) - change in shots per unit of course multiplier
+    /// Coefficient for CourseMultiplier (change in shots per course unit)
     /// </summary>
     public required double Beta3 { get; init; }
 
@@ -33,18 +33,13 @@ public class RegressionResult
     /// <summary>
     /// Gets the equation as a formatted string
     /// </summary>
-    public string GetEquation()
-    {
-        return $"z = {Beta0:F4} + {Beta1:F6}x + {Beta2:F4}y + {Beta3:F4}w";
-    }
+    public string GetEquation() => $"z = {Beta0:F4} + {Beta1:F6}x + {Beta2:F4}y + {Beta3:F4}w";
 
-    public override string ToString()
-    {
-        return $"Regression Result (n={DataPointCount}):\n" +
-               $"  ?? (Intercept) = {Beta0:F4}\n" +
-               $"  ?? (Days coefficient) = {Beta1:F6}\n" +
-               $"  ?? (Condition coefficient) = {Beta2:F4}\n" +
-               $"  ?? (Course coefficient) = {Beta3:F4}\n" +
-               $"  Equation: {GetEquation()}";
-    }
+    public override string ToString() =>
+        $"Regression Result (n={DataPointCount}):\n" +
+        $"  Intercept = {Beta0:F4}\n" +
+        $"  Days coefficient = {Beta1:F6}\n" +
+        $"  Condition coefficient = {Beta2:F4}\n" +
+        $"  Course coefficient = {Beta3:F4}\n" +
+        $"  Equation: {GetEquation()}";
 }

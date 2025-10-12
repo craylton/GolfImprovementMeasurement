@@ -81,6 +81,6 @@ Have fun and good luck lowering those scores!
 
 ## For my own future reference
 Running this app for my own recorded results tells me:
-- My game improves by about 0.01 strokes per day (about 4 strokes per year).
+- My game improves by about 0.01 strokes per day (about 3.6 strokes per year).
 - Playing in adverse conditions adds about 3.2 strokes to my score.
 - Playing at Peacehaven adds about 11.0 strokes compared to Burgess Hill.

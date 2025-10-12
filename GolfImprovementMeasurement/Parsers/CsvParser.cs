@@ -1,3 +1,4 @@
+using System.Globalization;
 using GolfImprovementMeasurement.Models;
 
 namespace GolfImprovementMeasurement.Parsers;
@@ -56,9 +57,9 @@ public class CsvParser(DateTime referenceDate)
         var roundDate = DateParser.Parse(dateStr);
         var daysSince = CalculateDaysSinceReference(roundDate);
 
-        var shots = int.Parse(parts[1].Trim());
-        var condition = decimal.Parse(parts[2].Trim());
-        var courseMultiplier = decimal.Parse(parts[3].Trim());
+        var shots = int.Parse(parts[1].Trim(), CultureInfo.InvariantCulture);
+        var condition = decimal.Parse(parts[2].Trim(), CultureInfo.InvariantCulture);
+        var courseMultiplier = decimal.Parse(parts[3].Trim(), CultureInfo.InvariantCulture);
 
         return new GolfRound
         {

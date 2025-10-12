@@ -4,17 +4,16 @@ namespace GolfImprovementMeasurement;
 
 public class CourseAnalyzer(MultipleLinearRegression regressionService)
 {
-    private const int MinimumRoundsForRegression = 4;
-
     public void AnalyzeCourse(string courseName, List<GolfRound> data)
     {
-        if (data.Count < MinimumRoundsForRegression)
+        try
         {
-            Console.WriteLine($"Insufficient data for {courseName}. At least {MinimumRoundsForRegression} rounds required.\n");
-            return;
+            PerformRegressionAnalysis(courseName, data);
         }
-
-        PerformRegressionAnalysis(courseName, data);
+        catch (ArgumentException ex) when (ex.ParamName == "rounds")
+        {
+            Console.WriteLine($"Insufficient data for {courseName}. {ex.Message}\n");
+        }
     }
 
     private void PerformRegressionAnalysis(string courseName, List<GolfRound> data)
@@ -25,7 +24,7 @@ public class CourseAnalyzer(MultipleLinearRegression regressionService)
         Console.WriteLine(result);
 
         var rSquared = regressionService.CalculateRSquared(data, result);
-        Console.WriteLine($"  R² (goodness of fit) = {rSquared:F4}");
+        Console.WriteLine($"  R^2 (goodness of fit) = {rSquared:F4}");
 
         DisplayPredictionExample(data, result);
     }

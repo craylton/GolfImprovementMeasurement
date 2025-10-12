@@ -19,7 +19,10 @@ public class MultipleLinearRegression
 
         var designMatrix = BuildDesignMatrix(rounds);
         var responseVector = BuildResponseVector(rounds);
-        var coefficients = CalculateCoefficients(designMatrix, responseVector);
+
+        // Solve least squares using QR decomposition for numerical stability
+        var qr = designMatrix.QR();
+        var coefficients = qr.Solve(responseVector);
 
         return CreateRegressionResult(coefficients, rounds.Count);
     }
@@ -76,7 +79,7 @@ public class MultipleLinearRegression
 
         for (int i = 0; i < rounds.Count; i++)
         {
-            matrix[i, 0] = 1.0; // Intercept column
+            matrix[i, 0] = 1.0; // Intercept
             matrix[i, 1] = rounds[i].DaysSinceReference;
             matrix[i, 2] = (double)rounds[i].CourseCondition;
             matrix[i, 3] = (double)rounds[i].CourseMultiplier;
@@ -95,17 +98,6 @@ public class MultipleLinearRegression
         }
 
         return vector;
-    }
-
-    private static Vector<double> CalculateCoefficients(Matrix<double> designMatrix, Vector<double> responseVector)
-    {
-        // Apply the Normal Equation: β̂ = (Xᵀ X)⁻¹ Xᵀ Y
-        var xTranspose = designMatrix.Transpose();
-        var xTransposeX = xTranspose.Multiply(designMatrix);
-        var xTransposeXInverse = xTransposeX.Inverse();
-        var xTransposeY = xTranspose.Multiply(responseVector);
-
-        return xTransposeXInverse.Multiply(xTransposeY);
     }
 
     private static RegressionResult CreateRegressionResult(

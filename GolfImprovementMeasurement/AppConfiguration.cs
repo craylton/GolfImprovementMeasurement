@@ -8,6 +8,6 @@ public class AppConfiguration
     public static AppConfiguration Default => new()
     {
         ReferenceDate = new DateTime(2023, 5, 21),
-        DataPath = "data/golf_data.csv"
+        DataPath = "Data/golf_data.csv"
     };
 }
