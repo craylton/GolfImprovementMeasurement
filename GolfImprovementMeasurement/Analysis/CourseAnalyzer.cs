@@ -5,7 +5,7 @@ namespace GolfImprovementMeasurement.Analysis;
 
 public class CourseAnalyzer(MultipleLinearRegressionService regressionService, GolfDataDisplayer displayer)
 {
-    private const int MinimumRoundsForRegression = 3;
+    private const int MinimumRoundsForRegression = 4;
 
     public void AnalyzeCourse(string courseName, List<GolfRound> data)
     {
@@ -48,9 +48,9 @@ public class CourseAnalyzer(MultipleLinearRegressionService regressionService, G
         }
 
         var sampleRound = data[0];
-        var predicted = regressionService.Predict(result, sampleRound.DaysSinceReference, sampleRound.CourseCondition);
+        var predicted = regressionService.Predict(result, sampleRound.DaysSinceReference, sampleRound.CourseCondition, sampleRound.CourseMultiplier);
 
-        Console.WriteLine($"\n  Example: For day {sampleRound.DaysSinceReference}, condition {sampleRound.CourseCondition}");
+        Console.WriteLine($"\n  Example: For day {sampleRound.DaysSinceReference}, condition {sampleRound.CourseCondition}, course {sampleRound.CourseMultiplier}");
         Console.WriteLine($"    Predicted shots: {predicted:F2}");
         Console.WriteLine($"    Actual shots: {sampleRound.NumberOfShots}");
     }

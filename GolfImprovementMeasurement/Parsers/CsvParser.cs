@@ -47,7 +47,7 @@ public class CsvParser(DateTime referenceDate)
     {
         var parts = line.Split(',');
 
-        if (parts.Length < 3)
+        if (parts.Length < 4)
         {
             return null;
         }
@@ -58,12 +58,14 @@ public class CsvParser(DateTime referenceDate)
 
         var shots = int.Parse(parts[1].Trim());
         var condition = ParseConditionMultiplier(parts[2].Trim());
+        var courseMultiplier = decimal.Parse(parts[3].Trim());
 
         return new GolfRound
         {
             DaysSinceReference = daysSince,
             NumberOfShots = shots,
-            CourseCondition = condition
+            CourseCondition = condition,
+            CourseMultiplier = courseMultiplier
         };
     }
 

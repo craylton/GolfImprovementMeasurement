@@ -13,13 +13,11 @@ public class GolfAnalysisApplication(
     {
         DisplayHeader();
 
-        var bhillData = parser.ParseFile(configuration.BhillDataPath);
-        var phavenData = parser.ParseFile(configuration.PhavenDataPath);
+        var combinedData = parser.ParseFile(configuration.CombinedDataPath);
 
         DisplayRegressionAnalysisHeader();
 
-        analyzer.AnalyzeCourse("Bhill", bhillData);
-        analyzer.AnalyzeCourse("Phaven", phavenData);
+        analyzer.AnalyzeCourse("Combined Courses", combinedData);
 
         DisplayFooter();
     }
@@ -35,7 +33,7 @@ public class GolfAnalysisApplication(
     private static void DisplayRegressionAnalysisHeader()
     {
         Console.WriteLine(new string('=', 80));
-        Console.WriteLine("MULTIPLE LINEAR REGRESSION ANALYSIS");
+        Console.WriteLine("MULTIPLE LINEAR REGRESSION ANALYSIS (4D)");
         Console.WriteLine(new string('=', 80));
     }
 

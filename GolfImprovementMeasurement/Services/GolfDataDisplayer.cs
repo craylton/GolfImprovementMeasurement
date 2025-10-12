@@ -24,7 +24,8 @@ public class GolfDataDisplayer(TextWriter output)
             output.WriteLine(
                 $"Days: {round.DaysSinceReference}, " +
                 $"Shots: {round.NumberOfShots}, " +
-                $"Condition: {round.CourseCondition}");
+                $"Condition: {round.CourseCondition}, " +
+                $"Course: {round.CourseMultiplier}");
         }
 
         output.WriteLine();

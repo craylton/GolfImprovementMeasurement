@@ -21,6 +21,11 @@ public class RegressionResult
     public required double Beta2 { get; init; }
 
     /// <summary>
+    /// Coefficient for CourseMultiplier (??) - change in shots per unit of course multiplier
+    /// </summary>
+    public required double Beta3 { get; init; }
+
+    /// <summary>
     /// Number of data points used in the regression
     /// </summary>
     public required int DataPointCount { get; init; }
@@ -30,7 +35,7 @@ public class RegressionResult
     /// </summary>
     public string GetEquation()
     {
-        return $"z = {Beta0:F4} + {Beta1:F6}x + {Beta2:F4}y";
+        return $"z = {Beta0:F4} + {Beta1:F6}x + {Beta2:F4}y + {Beta3:F4}w";
     }
 
     public override string ToString()
@@ -39,6 +44,7 @@ public class RegressionResult
                $"  ?? (Intercept) = {Beta0:F4}\n" +
                $"  ?? (Days coefficient) = {Beta1:F6}\n" +
                $"  ?? (Condition coefficient) = {Beta2:F4}\n" +
+               $"  ?? (Course coefficient) = {Beta3:F4}\n" +
                $"  Equation: {GetEquation()}";
     }
 }

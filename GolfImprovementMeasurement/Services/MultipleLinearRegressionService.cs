@@ -5,13 +5,13 @@ namespace GolfImprovementMeasurement.Services;
 
 public class MultipleLinearRegressionService
 {
-    private const int MinimumDataPoints = 3;
-    private const int NumberOfCoefficients = 3;
+    private const int MinimumDataPoints = 4;
+    private const int NumberOfCoefficients = 4;
 
     /// <summary>
-    /// Performs multiple linear regression on golf rounds to find the best-fit plane.
-    /// z = β₀ + β₁x + β₂y
-    /// where x = DaysSinceReference, y = CourseCondition, z = NumberOfShots
+    /// Performs multiple linear regression on golf rounds to find the best-fit hyperplane.
+    /// z = β₀ + β₁x + β₂y + β₃w
+    /// where x = DaysSinceReference, y = CourseCondition, w = CourseMultiplier, z = NumberOfShots
     /// </summary>
     public RegressionResult FitPlane(List<GolfRound> rounds)
     {
@@ -27,13 +27,14 @@ public class MultipleLinearRegressionService
     /// <summary>
     /// Predicts the number of shots based on the regression coefficients.
     /// </summary>
-    public double Predict(RegressionResult result, int daysSinceReference, decimal courseCondition)
+    public double Predict(RegressionResult result, int daysSinceReference, decimal courseCondition, decimal courseMultiplier)
     {
         ArgumentNullException.ThrowIfNull(result);
 
         return result.Beta0 +
                result.Beta1 * daysSinceReference +
-               result.Beta2 * (double)courseCondition;
+               result.Beta2 * (double)courseCondition +
+               result.Beta3 * (double)courseMultiplier;
     }
 
     /// <summary>
@@ -74,6 +75,7 @@ public class MultipleLinearRegressionService
             matrix[i, 0] = 1.0; // Intercept column
             matrix[i, 1] = rounds[i].DaysSinceReference;
             matrix[i, 2] = (double)rounds[i].CourseCondition;
+            matrix[i, 3] = (double)rounds[i].CourseMultiplier;
         }
 
         return matrix;
@@ -109,6 +111,7 @@ public class MultipleLinearRegressionService
             Beta0 = coefficients[0],
             Beta1 = coefficients[1],
             Beta2 = coefficients[2],
+            Beta3 = coefficients[3],
             DataPointCount = dataPointCount
         };
     }
@@ -129,7 +132,7 @@ public class MultipleLinearRegressionService
         foreach (var round in rounds)
         {
             var observed = round.NumberOfShots;
-            var predicted = Predict(result, round.DaysSinceReference, round.CourseCondition);
+            var predicted = Predict(result, round.DaysSinceReference, round.CourseCondition, round.CourseMultiplier);
 
             totalSumOfSquares += Math.Pow(observed - meanObserved, 2);
             residualSumOfSquares += Math.Pow(observed - predicted, 2);
