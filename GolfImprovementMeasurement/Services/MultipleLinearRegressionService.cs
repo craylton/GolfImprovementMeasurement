@@ -3,8 +3,11 @@ using MathNet.Numerics.LinearAlgebra;
 
 namespace GolfImprovementMeasurement.Services;
 
-public class MultipleLinearRegressionService
+public class MultipleLinearRegressionService : IRegressionService
 {
+    private const int MinimumDataPoints = 3;
+    private const int NumberOfCoefficients = 3;
+
     /// <summary>
     /// Performs multiple linear regression on golf rounds to find the best-fit plane.
     /// z = ?? + ??x + ??y
@@ -12,44 +15,13 @@ public class MultipleLinearRegressionService
     /// </summary>
     public RegressionResult FitPlane(List<GolfRound> rounds)
     {
-        if (rounds == null || rounds.Count < 3)
-        {
-            throw new ArgumentException("At least 3 data points are required for multiple linear regression.", nameof(rounds));
-        }
+        ValidateInput(rounds);
 
-        int n = rounds.Count;
+        var designMatrix = BuildDesignMatrix(rounds);
+        var responseVector = BuildResponseVector(rounds);
+        var coefficients = CalculateCoefficients(designMatrix, responseVector);
 
-        // Create design matrix X (n × 3)
-        // Column 0: all ones (for intercept ??)
-        // Column 1: x values (DaysSinceReference)
-        // Column 2: y values (CourseCondition)
-        var designMatrix = Matrix<double>.Build.Dense(n, 3);
-        
-        // Create response vector Y (n × 1)
-        var responseVector = Vector<double>.Build.Dense(n);
-
-        for (int i = 0; i < n; i++)
-        {
-            designMatrix[i, 0] = 1.0; // Intercept column
-            designMatrix[i, 1] = rounds[i].DaysSinceReference;
-            designMatrix[i, 2] = (double)rounds[i].CourseCondition;
-            responseVector[i] = rounds[i].NumberOfShots;
-        }
-
-        // Apply the Normal Equation: ?? = (X? X)?¹ X? Y
-        var xTranspose = designMatrix.Transpose();
-        var xTx = xTranspose.Multiply(designMatrix);
-        var xTxInverse = xTx.Inverse();
-        var xTy = xTranspose.Multiply(responseVector);
-        var coefficients = xTxInverse.Multiply(xTy);
-
-        return new RegressionResult
-        {
-            Beta0 = coefficients[0], // Intercept
-            Beta1 = coefficients[1], // Coefficient for DaysSinceReference
-            Beta2 = coefficients[2], // Coefficient for CourseCondition
-            DataPointCount = n
-        };
+        return CreateRegressionResult(coefficients, rounds.Count);
     }
 
     /// <summary>
@@ -57,6 +29,8 @@ public class MultipleLinearRegressionService
     /// </summary>
     public double Predict(RegressionResult result, int daysSinceReference, decimal courseCondition)
     {
+        ArgumentNullException.ThrowIfNull(result);
+        
         return result.Beta0 + 
                result.Beta1 * daysSinceReference + 
                result.Beta2 * (double)courseCondition;
@@ -68,68 +42,106 @@ public class MultipleLinearRegressionService
     /// </summary>
     public double CalculateRSquared(List<GolfRound> rounds, RegressionResult result)
     {
+        ArgumentNullException.ThrowIfNull(result);
+        
         if (rounds == null || rounds.Count == 0)
         {
             return 0;
         }
 
-        // Calculate mean of observed values
-        double meanObserved = rounds.Average(r => r.NumberOfShots);
+        var meanObserved = CalculateMeanShots(rounds);
+        var (totalSumOfSquares, residualSumOfSquares) = CalculateSumOfSquares(rounds, result, meanObserved);
 
-        // Calculate total sum of squares (SS_tot) and residual sum of squares (SS_res)
-        double ssTot = 0;
-        double ssRes = 0;
+        return CalculateRSquaredValue(totalSumOfSquares, residualSumOfSquares);
+    }
+
+    private static void ValidateInput(List<GolfRound> rounds)
+    {
+        if (rounds == null || rounds.Count < MinimumDataPoints)
+        {
+            throw new ArgumentException(
+                $"At least {MinimumDataPoints} data points are required for multiple linear regression.", 
+                nameof(rounds));
+        }
+    }
+
+    private static Matrix<double> BuildDesignMatrix(List<GolfRound> rounds)
+    {
+        var matrix = Matrix<double>.Build.Dense(rounds.Count, NumberOfCoefficients);
+
+        for (int i = 0; i < rounds.Count; i++)
+        {
+            matrix[i, 0] = 1.0; // Intercept column
+            matrix[i, 1] = rounds[i].DaysSinceReference;
+            matrix[i, 2] = (double)rounds[i].CourseCondition;
+        }
+
+        return matrix;
+    }
+
+    private static Vector<double> BuildResponseVector(List<GolfRound> rounds)
+    {
+        var vector = Vector<double>.Build.Dense(rounds.Count);
+
+        for (int i = 0; i < rounds.Count; i++)
+        {
+            vector[i] = rounds[i].NumberOfShots;
+        }
+
+        return vector;
+    }
+
+    private static Vector<double> CalculateCoefficients(Matrix<double> designMatrix, Vector<double> responseVector)
+    {
+        // Apply the Normal Equation: ?? = (X? X)?¹ X? Y
+        var xTranspose = designMatrix.Transpose();
+        var xTransposeX = xTranspose.Multiply(designMatrix);
+        var xTransposeXInverse = xTransposeX.Inverse();
+        var xTransposeY = xTranspose.Multiply(responseVector);
+        
+        return xTransposeXInverse.Multiply(xTransposeY);
+    }
+
+    private static RegressionResult CreateRegressionResult(Vector<double> coefficients, int dataPointCount)
+    {
+        return new RegressionResult
+        {
+            Beta0 = coefficients[0],
+            Beta1 = coefficients[1],
+            Beta2 = coefficients[2],
+            DataPointCount = dataPointCount
+        };
+    }
+
+    private static double CalculateMeanShots(List<GolfRound> rounds)
+    {
+        return rounds.Average(r => r.NumberOfShots);
+    }
+
+    private (double TotalSumOfSquares, double ResidualSumOfSquares) CalculateSumOfSquares(
+        List<GolfRound> rounds, 
+        RegressionResult result, 
+        double meanObserved)
+    {
+        double totalSumOfSquares = 0;
+        double residualSumOfSquares = 0;
 
         foreach (var round in rounds)
         {
-            double observed = round.NumberOfShots;
-            double predicted = Predict(result, round.DaysSinceReference, round.CourseCondition);
+            var observed = round.NumberOfShots;
+            var predicted = Predict(result, round.DaysSinceReference, round.CourseCondition);
             
-            ssTot += Math.Pow(observed - meanObserved, 2);
-            ssRes += Math.Pow(observed - predicted, 2);
+            totalSumOfSquares += Math.Pow(observed - meanObserved, 2);
+            residualSumOfSquares += Math.Pow(observed - predicted, 2);
         }
 
-        // R² = 1 - (SS_res / SS_tot)
-        return ssTot > 0 ? 1 - (ssRes / ssTot) : 0;
-    }
-}
-
-public class RegressionResult
-{
-    /// <summary>
-    /// Intercept (??) - baseline number of shots
-    /// </summary>
-    public double Beta0 { get; set; }
-
-    /// <summary>
-    /// Coefficient for DaysSinceReference (??) - change in shots per day
-    /// </summary>
-    public double Beta1 { get; set; }
-
-    /// <summary>
-    /// Coefficient for CourseCondition (??) - change in shots per unit of course condition
-    /// </summary>
-    public double Beta2 { get; set; }
-
-    /// <summary>
-    /// Number of data points used in the regression
-    /// </summary>
-    public int DataPointCount { get; set; }
-
-    /// <summary>
-    /// Gets the equation as a formatted string
-    /// </summary>
-    public string GetEquation()
-    {
-        return $"z = {Beta0:F4} + {Beta1:F6}x + {Beta2:F4}y";
+        return (totalSumOfSquares, residualSumOfSquares);
     }
 
-    public override string ToString()
+    private static double CalculateRSquaredValue(double totalSumOfSquares, double residualSumOfSquares)
     {
-        return $"Regression Result (n={DataPointCount}):\n" +
-               $"  ?? (Intercept) = {Beta0:F4}\n" +
-               $"  ?? (Days coefficient) = {Beta1:F6}\n" +
-               $"  ?? (Condition coefficient) = {Beta2:F4}\n" +
-               $"  Equation: {GetEquation()}";
+        return totalSumOfSquares > 0 
+            ? 1 - (residualSumOfSquares / totalSumOfSquares) 
+            : 0;
     }
 }

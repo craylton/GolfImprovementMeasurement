@@ -2,17 +2,39 @@ using GolfImprovementMeasurement.Models;
 
 namespace GolfImprovementMeasurement.Parsers;
 
-public class CsvParser(DateTime referenceDate)
+public class CsvParser(DateTime referenceDate) : IGolfDataParser
 {
+    private readonly DateTime _referenceDate = referenceDate;
+
     public List<GolfRound> ParseFile(string filePath)
     {
+        if (string.IsNullOrWhiteSpace(filePath))
+        {
+            throw new ArgumentException("File path cannot be null or empty.", nameof(filePath));
+        }
+
+        if (!File.Exists(filePath))
+        {
+            throw new FileNotFoundException($"CSV file not found: {filePath}");
+        }
+
         var rounds = new List<GolfRound>();
         var lines = File.ReadAllLines(filePath);
+
+        if (lines.Length == 0)
+        {
+            return rounds;
+        }
 
         // Skip header row
         for (int i = 1; i < lines.Length; i++)
         {
             var line = lines[i];
+            if (string.IsNullOrWhiteSpace(line))
+            {
+                continue;
+            }
+
             var round = ParseLine(line);
             if (round != null)
             {
@@ -32,24 +54,32 @@ public class CsvParser(DateTime referenceDate)
             return null;
         }
 
-        var dateStr = parts[0].Trim();
-        var roundDate = DateParser.Parse(dateStr);
-        var daysSince = CalculateDaysSinceReference(roundDate);
-
-        var shots = int.Parse(parts[1].Trim());
-        var condition = ParseConditionMultiplier(parts[2].Trim());
-
-        return new GolfRound
+        try
         {
-            DaysSinceReference = daysSince,
-            NumberOfShots = shots,
-            CourseCondition = condition
-        };
+            var dateStr = parts[0].Trim();
+            var roundDate = DateParser.Parse(dateStr);
+            var daysSince = CalculateDaysSinceReference(roundDate);
+
+            var shots = int.Parse(parts[1].Trim());
+            var condition = ParseConditionMultiplier(parts[2].Trim());
+
+            return new GolfRound
+            {
+                DaysSinceReference = daysSince,
+                NumberOfShots = shots,
+                CourseCondition = condition
+            };
+        }
+        catch (Exception)
+        {
+            // Log or handle parse errors if needed
+            return null;
+        }
     }
 
     private int CalculateDaysSinceReference(DateTime date)
     {
-        return (int)(date - referenceDate).TotalDays;
+        return (int)(date - _referenceDate).TotalDays;
     }
 
     private static decimal ParseConditionMultiplier(string conditionStr)
