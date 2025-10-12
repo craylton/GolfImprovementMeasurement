@@ -9,7 +9,7 @@ public class GolfAnalysisApplication(
 {
     public void Run()
     {
-        var combinedData = parser.ParseFile(configuration.CombinedDataPath);
+        var combinedData = parser.ParseFile(configuration.DataPath);
 
         DisplayRegressionAnalysisHeader();
 
