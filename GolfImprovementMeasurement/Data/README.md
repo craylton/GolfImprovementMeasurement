@@ -1,5 +1,25 @@
-We have 4 columns in this data file:
-1. Date: The date when the data was recorded.
-2. Score: The score achieved in the golf game.
-3. Condition: this has a value of 1 if the game was played in normal conditions, and a value of 2 if it was played in adverse conditions (like bad weather).
-4. Course: Burgess Hill = 1, Peacehaven = 2
+# Golf Data Format
+
+## Overview
+This directory contains golf round data used for improvement measurement and analysis.
+
+## Data Structure
+
+The CSV data file contains the following columns:
+
+| Column | Description | Format/Values |
+|--------|-------------|-----------------|
+| **Date** | The date when the data was recorded | Date format (YYYY-MM-DD) |
+| **Score** | The score achieved in the golf game | Numeric value (stroke play) |
+| **Condition** | Playing conditions | `1` = Normal conditions<br>`2` = Adverse conditions (e.g., bad weather) |
+| **Course** | Golf course identifier | `1` = Burgess Hill<br>`2` = Peacehaven |
+
+## Course Codes
+
+- **1**: Burgess Hill
+- **2**: Peacehaven
+
+## Condition Codes
+
+- **1**: Normal conditions
+- **2**: Adverse conditions (bad weather, etc.)
