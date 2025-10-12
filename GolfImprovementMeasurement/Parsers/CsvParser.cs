@@ -57,7 +57,7 @@ public class CsvParser(DateTime referenceDate)
         var daysSince = CalculateDaysSinceReference(roundDate);
 
         var shots = int.Parse(parts[1].Trim());
-        var condition = ParseConditionMultiplier(parts[2].Trim());
+        var condition = decimal.Parse(parts[2].Trim());
         var courseMultiplier = decimal.Parse(parts[3].Trim());
 
         return new GolfRound
@@ -71,10 +71,4 @@ public class CsvParser(DateTime referenceDate)
 
     private int CalculateDaysSinceReference(DateTime date) =>
         (int)(date - referenceDate).TotalDays;
-
-    // Convert 'x' to 2.0, otherwise parse as decimal
-    private static decimal ParseConditionMultiplier(string conditionStr) =>
-        conditionStr.Equals("x", StringComparison.OrdinalIgnoreCase)
-            ? 2.0m
-            : decimal.Parse(conditionStr);
 }

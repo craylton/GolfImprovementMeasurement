@@ -1,4 +1,4 @@
-namespace GolfImprovementMeasurement.Configuration;
+namespace GolfImprovementMeasurement;
 
 public class AppConfiguration
 {

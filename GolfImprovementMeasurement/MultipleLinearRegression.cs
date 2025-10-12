@@ -1,9 +1,9 @@
 ﻿using GolfImprovementMeasurement.Models;
 using MathNet.Numerics.LinearAlgebra;
 
-namespace GolfImprovementMeasurement.Services;
+namespace GolfImprovementMeasurement;
 
-public class MultipleLinearRegressionService
+public class MultipleLinearRegression
 {
     private const int MinimumDataPoints = 4;
     private const int NumberOfCoefficients = 4;
@@ -27,7 +27,11 @@ public class MultipleLinearRegressionService
     /// <summary>
     /// Predicts the number of shots based on the regression coefficients.
     /// </summary>
-    public double Predict(RegressionResult result, int daysSinceReference, decimal courseCondition, decimal courseMultiplier)
+    public double Predict(
+        RegressionResult result,
+        int daysSinceReference,
+        decimal courseCondition,
+        decimal courseMultiplier)
     {
         ArgumentNullException.ThrowIfNull(result);
 
@@ -104,9 +108,9 @@ public class MultipleLinearRegressionService
         return xTransposeXInverse.Multiply(xTransposeY);
     }
 
-    private static RegressionResult CreateRegressionResult(Vector<double> coefficients, int dataPointCount)
-    {
-        return new RegressionResult
+    private static RegressionResult CreateRegressionResult(
+        Vector<double> coefficients,
+        int dataPointCount) => new()
         {
             Beta0 = coefficients[0],
             Beta1 = coefficients[1],
@@ -114,12 +118,9 @@ public class MultipleLinearRegressionService
             Beta3 = coefficients[3],
             DataPointCount = dataPointCount
         };
-    }
 
-    private static double CalculateMeanShots(List<GolfRound> rounds)
-    {
-        return rounds.Average(r => r.NumberOfShots);
-    }
+    private static double CalculateMeanShots(List<GolfRound> rounds) =>
+        rounds.Average(r => r.NumberOfShots);
 
     private (double TotalSumOfSquares, double ResidualSumOfSquares) CalculateSumOfSquares(
         List<GolfRound> rounds,
@@ -144,7 +145,7 @@ public class MultipleLinearRegressionService
     private static double CalculateRSquaredValue(double totalSumOfSquares, double residualSumOfSquares)
     {
         return totalSumOfSquares > 0
-            ? 1 - (residualSumOfSquares / totalSumOfSquares)
+            ? 1 - residualSumOfSquares / totalSumOfSquares
             : 0;
     }
 }
