@@ -25,11 +25,12 @@ internal sealed class CsvParser(DateTime referenceDate)
 
         var rounds = new List<GolfRound>();
 
-        var isFirstLine = true; // Skip header row
+        var isFirstLine = true;
         foreach (var line in File.ReadLines(filePath))
         {
             if (isFirstLine)
             {
+                // Skip header row
                 isFirstLine = false;
                 continue;
             }
@@ -59,22 +60,34 @@ internal sealed class CsvParser(DateTime referenceDate)
         }
 
         var dateStr = parts[DateIndex];
-        if (!DateParser.TryParse(dateStr, referenceDate, out var daysSinceReference))
+        if (!ElapsedDaysParser.TryParse(dateStr, referenceDate, out var daysSinceReference))
         {
             return false;
         }
 
-        if (!int.TryParse(parts[ShotsIndex], NumberStyles.Integer, CultureInfo.InvariantCulture, out var shots))
+        if (!int.TryParse(
+            parts[ShotsIndex],
+            NumberStyles.Integer,
+            CultureInfo.InvariantCulture,
+            out var shots))
         {
             return false;
         }
 
-        if (!decimal.TryParse(parts[ConditionIndex], NumberStyles.Number, CultureInfo.InvariantCulture, out var courseCondition))
+        if (!decimal.TryParse(
+            parts[ConditionIndex],
+            NumberStyles.Number,
+            CultureInfo.InvariantCulture,
+            out var courseCondition))
         {
             return false;
         }
 
-        if (!decimal.TryParse(parts[CourseIndex], NumberStyles.Number, CultureInfo.InvariantCulture, out var courseMultiplier))
+        if (!decimal.TryParse(
+            parts[CourseIndex],
+            NumberStyles.Number,
+            CultureInfo.InvariantCulture,
+            out var courseMultiplier))
         {
             return false;
         }

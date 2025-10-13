@@ -8,13 +8,9 @@ internal sealed class MultipleLinearRegression
     private const int MinimumDataPoints = 4;
     private const int NumberOfCoefficients = 4;
 
-    // Expose the required data points internally so callers can validate without exceptions
-    internal static int RequiredDataPoints => MinimumDataPoints;
-
     /// <summary>
     /// Performs multiple linear regression on golf rounds to find the best-fit hyperplane.
-    /// shots = β₀ + β₁*days + β₂*condition + β₃*course
-    /// where days = DaysSinceReference, condition = CourseCondition, course = CourseMultiplier, shots = NumberOfShots
+    /// NumberOfShots = β₀ + β₁*DaysSinceReference + β₂*CourseCondition + β₃*CourseMultiplier
     /// </summary>
     public RegressionResult FitPlane(IReadOnlyList<GolfRound> rounds)
     {
@@ -23,7 +19,6 @@ internal sealed class MultipleLinearRegression
         var designMatrix = BuildDesignMatrix(rounds);
         var responseVector = BuildResponseVector(rounds);
 
-        // Solve least squares using QR decomposition for numerical stability
         var decomposition = designMatrix.QR();
         var coefficients = decomposition.Solve(responseVector);
 
@@ -46,7 +41,7 @@ internal sealed class MultipleLinearRegression
 
         for (int i = 0; i < rounds.Count; i++)
         {
-            matrix[i, 0] = 1.0; // Intercept
+            matrix[i, 0] = 1.0;
             matrix[i, 1] = rounds[i].DaysSinceReference;
             matrix[i, 2] = (double)rounds[i].CourseCondition;
             matrix[i, 3] = (double)rounds[i].CourseMultiplier;

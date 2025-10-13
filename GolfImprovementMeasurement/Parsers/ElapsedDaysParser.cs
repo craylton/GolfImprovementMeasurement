@@ -2,7 +2,7 @@ using System.Globalization;
 
 namespace GolfImprovementMeasurement.Parsers;
 
-internal static class DateParser
+internal static class ElapsedDaysParser
 {
     private static readonly string[] SupportedFormats =
     [

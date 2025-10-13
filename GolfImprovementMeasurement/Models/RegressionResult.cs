@@ -17,6 +17,32 @@ internal sealed record RegressionResult(
         $"{ConditionCoefficient:F4}*condition + " +
         $"{CourseCoefficient:F4}*course";
 
+    public double CalculateRSquared(IReadOnlyList<GolfRound> rounds)
+    {
+        if (rounds.Count == 0)
+        {
+            return 0;
+        }
+
+        var meanObserved = rounds.Average(r => r.NumberOfShots);
+
+        double totalSumOfSquares = 0;
+        double residualSumOfSquares = 0;
+
+        foreach (var round in rounds)
+        {
+            var observed = round.NumberOfShots;
+            var predicted = Predict(round.DaysSinceReference, round.CourseCondition, round.CourseMultiplier);
+
+            totalSumOfSquares += Math.Pow(observed - meanObserved, 2);
+            residualSumOfSquares += Math.Pow(observed - predicted, 2);
+        }
+
+        return totalSumOfSquares > 0
+            ? 1 - residualSumOfSquares / totalSumOfSquares
+            : 0;
+    }
+
     public double Predict(int daysSinceReference, decimal courseCondition, decimal courseMultiplier) =>
         Intercept +
         DaysCoefficient * daysSinceReference +
