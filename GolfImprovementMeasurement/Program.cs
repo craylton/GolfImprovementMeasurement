@@ -14,10 +14,12 @@ var rounds = parser.ParseFile(configuration.DataPath);
 // Fit regression plane
 var regressionService = new MultipleLinearRegression();
 var result = regressionService.FitPlane(rounds);
+Console.WriteLine();
 Console.WriteLine(result);
 
 // Calculate R^2 (goodness of fit)
 var rSquared = result.CalculateRSquared(rounds);
+Console.WriteLine();
 Console.WriteLine($"  R^2 (goodness of fit) = {rSquared:F4}");
 
 // Predict sample using the most recent round
