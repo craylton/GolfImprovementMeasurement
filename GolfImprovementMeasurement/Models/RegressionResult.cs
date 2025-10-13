@@ -17,6 +17,12 @@ internal sealed record RegressionResult(
         $"{ConditionCoefficient:F4}*condition + " +
         $"{CourseCoefficient:F4}*course";
 
+    public double Predict(int daysSinceReference, decimal courseCondition, decimal courseMultiplier) =>
+        Intercept +
+        DaysCoefficient * daysSinceReference +
+        ConditionCoefficient * (double)courseCondition +
+        CourseCoefficient * (double)courseMultiplier;
+
     public override string ToString() =>
         $"Regression Result (n={DataPointCount}):{Environment.NewLine}" +
         $"  Intercept = {Intercept:F4}{Environment.NewLine}" +

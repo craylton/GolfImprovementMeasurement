@@ -30,38 +30,6 @@ internal sealed class MultipleLinearRegression
         return CreateRegressionResult(coefficients, rounds.Count);
     }
 
-    /// <summary>
-    /// Predicts the number of shots based on the regression coefficients.
-    /// </summary>
-    public double Predict(
-        RegressionResult result,
-        int daysSinceReference,
-        decimal courseCondition,
-        decimal courseMultiplier)
-    {
-        return result.Intercept +
-               result.DaysCoefficient * daysSinceReference +
-               result.ConditionCoefficient * (double)courseCondition +
-               result.CourseCoefficient * (double)courseMultiplier;
-    }
-
-    /// <summary>
-    /// Calculates the R² (coefficient of determination) for the regression model.
-    /// R² indicates how well the model fits the data (0 to 1, where 1 is perfect fit).
-    /// </summary>
-    public double CalculateRSquared(IReadOnlyList<GolfRound> rounds, RegressionResult result)
-    {
-        if (rounds.Count == 0)
-        {
-            return 0;
-        }
-
-        var meanObserved = CalculateMeanShots(rounds);
-        var (totalSumOfSquares, residualSumOfSquares) = CalculateSumOfSquares(rounds, result, meanObserved);
-
-        return CalculateRSquaredValue(totalSumOfSquares, residualSumOfSquares);
-    }
-
     private static void ValidateInput(IReadOnlyList<GolfRound> rounds)
     {
         if (rounds.Count < MinimumDataPoints)
@@ -107,32 +75,4 @@ internal sealed class MultipleLinearRegression
             coefficients[2],
             coefficients[3],
             dataPointCount);
-
-    private static double CalculateMeanShots(IReadOnlyList<GolfRound> rounds) =>
-        rounds.Average(r => r.NumberOfShots);
-
-    private (double TotalSumOfSquares, double ResidualSumOfSquares) CalculateSumOfSquares(
-        IReadOnlyList<GolfRound> rounds,
-        RegressionResult result,
-        double meanObserved)
-    {
-        double totalSumOfSquares = 0;
-        double residualSumOfSquares = 0;
-
-        foreach (var round in rounds)
-        {
-            var observed = round.NumberOfShots;
-            var predicted = Predict(result, round.DaysSinceReference, round.CourseCondition, round.CourseMultiplier);
-
-            totalSumOfSquares += Math.Pow(observed - meanObserved, 2);
-            residualSumOfSquares += Math.Pow(observed - predicted, 2);
-        }
-
-        return (totalSumOfSquares, residualSumOfSquares);
-    }
-
-    private static double CalculateRSquaredValue(double totalSumOfSquares, double residualSumOfSquares) =>
-        totalSumOfSquares > 0
-            ? 1 - residualSumOfSquares / totalSumOfSquares
-            : 0;
 }

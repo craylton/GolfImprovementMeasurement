@@ -34,11 +34,6 @@ internal sealed class CsvParser(DateTime referenceDate)
                 continue;
             }
 
-            if (string.IsNullOrWhiteSpace(line))
-            {
-                continue;
-            }
-
             if (TryParseLine(line, out var round))
             {
                 rounds.Add(round);
@@ -52,6 +47,11 @@ internal sealed class CsvParser(DateTime referenceDate)
     {
         round = default!;
 
+        if (string.IsNullOrWhiteSpace(line))
+        {
+            return false;
+        }
+
         var parts = line.Split(',', StringSplitOptions.TrimEntries);
         if (parts.Length < ExpectedFieldCount)
         {
@@ -59,12 +59,10 @@ internal sealed class CsvParser(DateTime referenceDate)
         }
 
         var dateStr = parts[DateIndex];
-        if (!DateParser.TryParse(dateStr, out var roundDate))
+        if (!DateParser.TryParse(dateStr, referenceDate, out var daysSinceReference))
         {
             return false;
         }
-
-        var daysSinceReference = CalculateDaysSinceReference(roundDate);
 
         if (!int.TryParse(parts[ShotsIndex], NumberStyles.Integer, CultureInfo.InvariantCulture, out var shots))
         {
@@ -84,7 +82,4 @@ internal sealed class CsvParser(DateTime referenceDate)
         round = new GolfRound(daysSinceReference, shots, courseCondition, courseMultiplier);
         return true;
     }
-
-    private int CalculateDaysSinceReference(DateTime date) =>
-        (int)(date.Date - referenceDate.Date).TotalDays;
 }

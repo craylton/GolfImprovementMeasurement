@@ -6,7 +6,7 @@ internal static class DateParser
 {
     private static readonly string[] SupportedFormats =
     [
-        "yyyy-MM-dd",     // 2025-05-04 (ISO 8601, per data README)
+        "yyyy-MM-dd",     // 2025-05-04 (ISO 8601)
         "d MMM yyyy",      // 21 May 2023
         "dd MMM yyyy",     // 21 May 2023
         "d MMMM yyyy",     // 21 May 2023
@@ -16,7 +16,7 @@ internal static class DateParser
         "dd/MM/yyyy",      // 04/05/2025
     ];
 
-    public static bool TryParse(string? dateStr, out DateTime result)
+    public static bool TryParse(string? dateStr, DateTime referenceDate, out int result)
     {
         result = default;
         if (string.IsNullOrWhiteSpace(dateStr))
@@ -24,11 +24,17 @@ internal static class DateParser
             return false;
         }
 
-        return DateTime.TryParseExact(
+        if (!DateTime.TryParseExact(
             dateStr,
             SupportedFormats,
             CultureInfo.InvariantCulture,
             DateTimeStyles.AllowWhiteSpaces,
-            out result);
+            out var dateTime))
+        {
+            return false;
+        }
+
+        result = (int)(dateTime.Date - referenceDate.Date).TotalDays;
+        return true;
     }
 }
