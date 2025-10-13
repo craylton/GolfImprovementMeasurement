@@ -2,33 +2,33 @@ using System.Globalization;
 
 namespace GolfImprovementMeasurement.Parsers;
 
-public static class DateParser
+internal static class DateParser
 {
     private static readonly string[] SupportedFormats =
     [
+        "yyyy-MM-dd",     // 2025-05-04 (ISO 8601, per data README)
         "d MMM yyyy",      // 21 May 2023
         "dd MMM yyyy",     // 21 May 2023
         "d MMMM yyyy",     // 21 May 2023
         "dd MMMM yyyy",    // 21 May 2023
-        "M/d/yyyy",        // 4/5/2025
-        "d/M/yyyy",        // 4/5/2025
+        "M/d/yyyy",        // 4/5/2025 or 04/05/2025
+        "d/M/yyyy",        // 4/5/2025 or 04/05/2025
         "dd/MM/yyyy",      // 04/05/2025
     ];
 
-    public static DateTime Parse(string dateStr)
+    public static bool TryParse(string? dateStr, out DateTime result)
     {
-        if (DateTime.TryParseExact(dateStr, SupportedFormats, CultureInfo.InvariantCulture,
-            DateTimeStyles.AllowWhiteSpaces, out DateTime result))
+        result = default;
+        if (string.IsNullOrWhiteSpace(dateStr))
         {
-            return result;
+            return false;
         }
 
-        // Fallback to general parsing
-        if (DateTime.TryParse(dateStr, out result))
-        {
-            return result;
-        }
-
-        throw new FormatException($"Unable to parse date: {dateStr}");
+        return DateTime.TryParseExact(
+            dateStr,
+            SupportedFormats,
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.AllowWhiteSpaces,
+            out result);
     }
 }

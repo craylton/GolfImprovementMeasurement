@@ -3,9 +3,15 @@ using GolfImprovementMeasurement.Models;
 
 namespace GolfImprovementMeasurement.Parsers;
 
-public class CsvParser(DateTime referenceDate)
+internal sealed class CsvParser(DateTime referenceDate)
 {
-    public List<GolfRound> ParseFile(string filePath)
+    private const int ExpectedFieldCount = 4;
+    private const int DateIndex = 0;
+    private const int ShotsIndex = 1;
+    private const int ConditionIndex = 2;
+    private const int CourseIndex = 3;
+
+    public IReadOnlyList<GolfRound> ParseFile(string filePath)
     {
         if (string.IsNullOrWhiteSpace(filePath))
         {
@@ -18,24 +24,22 @@ public class CsvParser(DateTime referenceDate)
         }
 
         var rounds = new List<GolfRound>();
-        var lines = File.ReadAllLines(filePath);
 
-        if (lines.Length == 0)
+        var isFirstLine = true; // Skip header row
+        foreach (var line in File.ReadLines(filePath))
         {
-            return rounds;
-        }
+            if (isFirstLine)
+            {
+                isFirstLine = false;
+                continue;
+            }
 
-        // Skip header row
-        for (int i = 1; i < lines.Length; i++)
-        {
-            var line = lines[i];
             if (string.IsNullOrWhiteSpace(line))
             {
                 continue;
             }
 
-            var round = ParseLine(line);
-            if (round != null)
+            if (TryParseLine(line, out var round))
             {
                 rounds.Add(round);
             }
@@ -44,32 +48,43 @@ public class CsvParser(DateTime referenceDate)
         return rounds;
     }
 
-    private GolfRound? ParseLine(string line)
+    private bool TryParseLine(string line, out GolfRound round)
     {
-        var parts = line.Split(',');
+        round = default!;
 
-        if (parts.Length < 4)
+        var parts = line.Split(',', StringSplitOptions.TrimEntries);
+        if (parts.Length < ExpectedFieldCount)
         {
-            return null;
+            return false;
         }
 
-        var dateStr = parts[0].Trim();
-        var roundDate = DateParser.Parse(dateStr);
-        var daysSince = CalculateDaysSinceReference(roundDate);
-
-        var shots = int.Parse(parts[1].Trim(), CultureInfo.InvariantCulture);
-        var condition = decimal.Parse(parts[2].Trim(), CultureInfo.InvariantCulture);
-        var courseMultiplier = decimal.Parse(parts[3].Trim(), CultureInfo.InvariantCulture);
-
-        return new GolfRound
+        var dateStr = parts[DateIndex];
+        if (!DateParser.TryParse(dateStr, out var roundDate))
         {
-            DaysSinceReference = daysSince,
-            NumberOfShots = shots,
-            CourseCondition = condition,
-            CourseMultiplier = courseMultiplier
-        };
+            return false;
+        }
+
+        var daysSinceReference = CalculateDaysSinceReference(roundDate);
+
+        if (!int.TryParse(parts[ShotsIndex], NumberStyles.Integer, CultureInfo.InvariantCulture, out var shots))
+        {
+            return false;
+        }
+
+        if (!decimal.TryParse(parts[ConditionIndex], NumberStyles.Number, CultureInfo.InvariantCulture, out var courseCondition))
+        {
+            return false;
+        }
+
+        if (!decimal.TryParse(parts[CourseIndex], NumberStyles.Number, CultureInfo.InvariantCulture, out var courseMultiplier))
+        {
+            return false;
+        }
+
+        round = new GolfRound(daysSinceReference, shots, courseCondition, courseMultiplier);
+        return true;
     }
 
     private int CalculateDaysSinceReference(DateTime date) =>
-        (int)(date - referenceDate).TotalDays;
+        (int)(date.Date - referenceDate.Date).TotalDays;
 }

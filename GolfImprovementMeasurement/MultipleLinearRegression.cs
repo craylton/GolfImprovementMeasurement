@@ -3,17 +3,20 @@ using MathNet.Numerics.LinearAlgebra;
 
 namespace GolfImprovementMeasurement;
 
-public class MultipleLinearRegression
+internal sealed class MultipleLinearRegression
 {
     private const int MinimumDataPoints = 4;
     private const int NumberOfCoefficients = 4;
 
+    // Expose the required data points internally so callers can validate without exceptions
+    internal static int RequiredDataPoints => MinimumDataPoints;
+
     /// <summary>
     /// Performs multiple linear regression on golf rounds to find the best-fit hyperplane.
-    /// z = β₀ + β₁x + β₂y + β₃w
-    /// where x = DaysSinceReference, y = CourseCondition, w = CourseMultiplier, z = NumberOfShots
+    /// shots = β₀ + β₁*days + β₂*condition + β₃*course
+    /// where days = DaysSinceReference, condition = CourseCondition, course = CourseMultiplier, shots = NumberOfShots
     /// </summary>
-    public RegressionResult FitPlane(List<GolfRound> rounds)
+    public RegressionResult FitPlane(IReadOnlyList<GolfRound> rounds)
     {
         ValidateInput(rounds);
 
@@ -21,8 +24,8 @@ public class MultipleLinearRegression
         var responseVector = BuildResponseVector(rounds);
 
         // Solve least squares using QR decomposition for numerical stability
-        var qr = designMatrix.QR();
-        var coefficients = qr.Solve(responseVector);
+        var decomposition = designMatrix.QR();
+        var coefficients = decomposition.Solve(responseVector);
 
         return CreateRegressionResult(coefficients, rounds.Count);
     }
@@ -36,23 +39,19 @@ public class MultipleLinearRegression
         decimal courseCondition,
         decimal courseMultiplier)
     {
-        ArgumentNullException.ThrowIfNull(result);
-
-        return result.Beta0 +
-               result.Beta1 * daysSinceReference +
-               result.Beta2 * (double)courseCondition +
-               result.Beta3 * (double)courseMultiplier;
+        return result.Intercept +
+               result.DaysCoefficient * daysSinceReference +
+               result.ConditionCoefficient * (double)courseCondition +
+               result.CourseCoefficient * (double)courseMultiplier;
     }
 
     /// <summary>
     /// Calculates the R² (coefficient of determination) for the regression model.
     /// R² indicates how well the model fits the data (0 to 1, where 1 is perfect fit).
     /// </summary>
-    public double CalculateRSquared(List<GolfRound> rounds, RegressionResult result)
+    public double CalculateRSquared(IReadOnlyList<GolfRound> rounds, RegressionResult result)
     {
-        ArgumentNullException.ThrowIfNull(result);
-
-        if (rounds == null || rounds.Count == 0)
+        if (rounds.Count == 0)
         {
             return 0;
         }
@@ -63,9 +62,9 @@ public class MultipleLinearRegression
         return CalculateRSquaredValue(totalSumOfSquares, residualSumOfSquares);
     }
 
-    private static void ValidateInput(List<GolfRound> rounds)
+    private static void ValidateInput(IReadOnlyList<GolfRound> rounds)
     {
-        if (rounds == null || rounds.Count < MinimumDataPoints)
+        if (rounds.Count < MinimumDataPoints)
         {
             throw new ArgumentException(
                 $"At least {MinimumDataPoints} data points are required for multiple linear regression.",
@@ -73,7 +72,7 @@ public class MultipleLinearRegression
         }
     }
 
-    private static Matrix<double> BuildDesignMatrix(List<GolfRound> rounds)
+    private static Matrix<double> BuildDesignMatrix(IReadOnlyList<GolfRound> rounds)
     {
         var matrix = Matrix<double>.Build.Dense(rounds.Count, NumberOfCoefficients);
 
@@ -88,7 +87,7 @@ public class MultipleLinearRegression
         return matrix;
     }
 
-    private static Vector<double> BuildResponseVector(List<GolfRound> rounds)
+    private static Vector<double> BuildResponseVector(IReadOnlyList<GolfRound> rounds)
     {
         var vector = Vector<double>.Build.Dense(rounds.Count);
 
@@ -102,20 +101,18 @@ public class MultipleLinearRegression
 
     private static RegressionResult CreateRegressionResult(
         Vector<double> coefficients,
-        int dataPointCount) => new()
-        {
-            Beta0 = coefficients[0],
-            Beta1 = coefficients[1],
-            Beta2 = coefficients[2],
-            Beta3 = coefficients[3],
-            DataPointCount = dataPointCount
-        };
+        int dataPointCount) => new(
+            coefficients[0],
+            coefficients[1],
+            coefficients[2],
+            coefficients[3],
+            dataPointCount);
 
-    private static double CalculateMeanShots(List<GolfRound> rounds) =>
+    private static double CalculateMeanShots(IReadOnlyList<GolfRound> rounds) =>
         rounds.Average(r => r.NumberOfShots);
 
     private (double TotalSumOfSquares, double ResidualSumOfSquares) CalculateSumOfSquares(
-        List<GolfRound> rounds,
+        IReadOnlyList<GolfRound> rounds,
         RegressionResult result,
         double meanObserved)
     {
@@ -134,10 +131,8 @@ public class MultipleLinearRegression
         return (totalSumOfSquares, residualSumOfSquares);
     }
 
-    private static double CalculateRSquaredValue(double totalSumOfSquares, double residualSumOfSquares)
-    {
-        return totalSumOfSquares > 0
+    private static double CalculateRSquaredValue(double totalSumOfSquares, double residualSumOfSquares) =>
+        totalSumOfSquares > 0
             ? 1 - residualSumOfSquares / totalSumOfSquares
             : 0;
-    }
 }

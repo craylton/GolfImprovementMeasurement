@@ -3,43 +3,25 @@ namespace GolfImprovementMeasurement.Models;
 /// <summary>
 /// Represents the result of a multiple linear regression analysis.
 /// </summary>
-public class RegressionResult
+internal sealed record RegressionResult(
+    double Intercept,
+    double DaysCoefficient,
+    double ConditionCoefficient,
+    double CourseCoefficient,
+    int DataPointCount)
 {
-    /// <summary>
-    /// Intercept (baseline number of shots)
-    /// </summary>
-    public required double Beta0 { get; init; }
-
-    /// <summary>
-    /// Coefficient for DaysSinceReference (change in shots per day)
-    /// </summary>
-    public required double Beta1 { get; init; }
-
-    /// <summary>
-    /// Coefficient for CourseCondition (change in shots per condition unit)
-    /// </summary>
-    public required double Beta2 { get; init; }
-
-    /// <summary>
-    /// Coefficient for CourseMultiplier (change in shots per course unit)
-    /// </summary>
-    public required double Beta3 { get; init; }
-
-    /// <summary>
-    /// Number of data points used in the regression
-    /// </summary>
-    public required int DataPointCount { get; init; }
-
-    /// <summary>
-    /// Gets the equation as a formatted string
-    /// </summary>
-    public string GetEquation() => $"z = {Beta0:F4} + {Beta1:F6}x + {Beta2:F4}y + {Beta3:F4}w";
+    public string GetEquation() =>
+        $"shots = " +
+        $"{Intercept:F4} + " +
+        $"{DaysCoefficient:F6}*days + " +
+        $"{ConditionCoefficient:F4}*condition + " +
+        $"{CourseCoefficient:F4}*course";
 
     public override string ToString() =>
-        $"Regression Result (n={DataPointCount}):\n" +
-        $"  Intercept = {Beta0:F4}\n" +
-        $"  Days coefficient = {Beta1:F6}\n" +
-        $"  Condition coefficient = {Beta2:F4}\n" +
-        $"  Course coefficient = {Beta3:F4}\n" +
+        $"Regression Result (n={DataPointCount}):{Environment.NewLine}" +
+        $"  Intercept = {Intercept:F4}{Environment.NewLine}" +
+        $"  Days coefficient = {DaysCoefficient:F6}{Environment.NewLine}" +
+        $"  Condition coefficient = {ConditionCoefficient:F4}{Environment.NewLine}" +
+        $"  Course coefficient = {CourseCoefficient:F4}{Environment.NewLine}" +
         $"  Equation: {GetEquation()}";
 }

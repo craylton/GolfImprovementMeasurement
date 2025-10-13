@@ -1,13 +1,6 @@
 namespace GolfImprovementMeasurement;
 
-public class AppConfiguration
+internal sealed record AppConfiguration(DateTime ReferenceDate, string DataPath)
 {
-    public required DateTime ReferenceDate { get; init; }
-    public required string DataPath { get; init; }
-
-    public static AppConfiguration Default => new()
-    {
-        ReferenceDate = new DateTime(2023, 5, 21),
-        DataPath = "Data/golf_data.csv"
-    };
+    public static AppConfiguration Default => new(new(2023, 5, 21), "Data/golf_data.csv");
 }
