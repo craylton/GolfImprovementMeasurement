@@ -1,8 +1,5 @@
 namespace GolfImprovementMeasurement.Models;
 
-/// <summary>
-/// Represents the result of a multiple linear regression analysis.
-/// </summary>
 internal sealed record RegressionResult(
     double Intercept,
     double DaysCoefficient,
