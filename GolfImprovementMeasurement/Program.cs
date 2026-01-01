@@ -22,8 +22,8 @@ if (parseResult.Errors.Count > 0)
 
 if (parseResult.Rounds.Count == 0)
 {
-    Console.WriteLine("Error: No valid data found in CSV file.");
-    return;
+    Console.Error.WriteLine("Error: No valid data found in CSV file.");
+    return 1;
 }
 
 // Fit regression plane
@@ -45,9 +45,8 @@ var predicted = result.Predict(
     sampleRound.CourseMultiplier);
 
 Console.WriteLine();
-Console.WriteLine($"  Example: " +
-    $"For day {sampleRound.DaysSinceReference}, " +
-    $"condition {sampleRound.CourseCondition}, " +
-    $"course {sampleRound.CourseMultiplier}");
+Console.WriteLine($"  Example: For day {sampleRound.DaysSinceReference}, condition {sampleRound.CourseCondition}, course {sampleRound.CourseMultiplier}");
 Console.WriteLine($"  Predicted shots: {predicted:F2}");
 Console.WriteLine($"  Actual shots: {sampleRound.NumberOfShots}");
+
+return 0;

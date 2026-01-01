@@ -55,10 +55,12 @@ internal sealed record RegressionResult(
         CourseCoefficient * courseMultiplier;
 
     public override string ToString() =>
-        $"Regression Result (n={DataPointCount}):{Environment.NewLine}" +
-        $"  Intercept = {Intercept:F4}{Environment.NewLine}" +
-        $"  Days coefficient = {DaysCoefficient:F6}{Environment.NewLine}" +
-        $"  Condition coefficient = {ConditionCoefficient:F4}{Environment.NewLine}" +
-        $"  Course coefficient = {CourseCoefficient:F4}{Environment.NewLine}" +
-        $"  Equation: {GetEquation()}";
+        $$"""
+        Regression Result (n={{DataPointCount}}):
+          Intercept = {{Intercept:F4}}
+          Days coefficient = {{DaysCoefficient:F6}}
+          Condition coefficient = {{ConditionCoefficient:F4}}
+          Course coefficient = {{CourseCoefficient:F4}}
+          Equation: {{GetEquation()}}
+        """;
 }

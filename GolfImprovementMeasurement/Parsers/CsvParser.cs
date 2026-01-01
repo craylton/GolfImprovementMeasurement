@@ -3,7 +3,7 @@ using GolfImprovementMeasurement.Models;
 
 namespace GolfImprovementMeasurement.Parsers;
 
-internal sealed partial class CsvParser(DateTime referenceDate)
+internal sealed class CsvParser(DateTime referenceDate)
 {
     private const int ExpectedFieldCount = 4;
 
@@ -22,9 +22,8 @@ internal sealed partial class CsvParser(DateTime referenceDate)
         }
 
         var results = File.ReadLines(filePath)
-            .Skip(1) // Skip header
-            .Select((line, index) => (Line: line, Number: index + 2)) // Line numbers start at 2
-            .Select(x => ParseLine(x.Line, x.Number))
+            .Skip(1)
+            .Select((line, index) => ParseLine(line, index + 2))
             .ToList();
 
         var rounds = results
