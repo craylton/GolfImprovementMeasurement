@@ -3,66 +3,61 @@ using GolfImprovementMeasurement.Models;
 
 namespace GolfImprovementMeasurement.Parsers;
 
-internal sealed class CsvParser(DateTime referenceDate)
+internal sealed partial class CsvParser(DateTime referenceDate)
 {
     private const int ExpectedFieldCount = 4;
+
     private const int DateIndex = 0;
     private const int ShotsIndex = 1;
     private const int ConditionIndex = 2;
     private const int CourseIndex = 3;
 
-    public IReadOnlyList<GolfRound> ParseFile(string filePath)
+    public CsvParseResult ParseFile(string filePath)
     {
-        if (string.IsNullOrWhiteSpace(filePath))
-        {
-            throw new ArgumentException("File path cannot be null or empty.", nameof(filePath));
-        }
+        ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
 
         if (!File.Exists(filePath))
         {
             throw new FileNotFoundException($"CSV file not found: {filePath}");
         }
 
-        var rounds = new List<GolfRound>();
+        var results = File.ReadLines(filePath)
+            .Skip(1) // Skip header
+            .Select((line, index) => (Line: line, Number: index + 2)) // Line numbers start at 2
+            .Select(x => ParseLine(x.Line, x.Number))
+            .ToList();
 
-        var isFirstLine = true;
-        foreach (var line in File.ReadLines(filePath))
-        {
-            if (isFirstLine)
-            {
-                // Skip header row
-                isFirstLine = false;
-                continue;
-            }
+        var rounds = results
+            .Where(parsedLine => parsedLine.IsSuccess)
+            .Select(parsedLine => parsedLine.Round!)
+            .ToList();
 
-            if (TryParseLine(line, out var round))
-            {
-                rounds.Add(round);
-            }
-        }
+        var errors = results
+            .Where(parsedLine => !parsedLine.IsSuccess)
+            .Select(parsedLine => parsedLine.Error!)
+            .ToList();
 
-        return rounds;
+        return new CsvParseResult(rounds, errors);
     }
 
-    private bool TryParseLine(string line, out GolfRound round)
+    private ParsedLine ParseLine(string line, int lineNumber)
     {
-        round = default!;
-
         if (string.IsNullOrWhiteSpace(line))
         {
-            return false;
+            return ParsedLine.Failure($"Line {lineNumber}: Empty or whitespace line");
         }
 
         var parts = line.Split(',', StringSplitOptions.TrimEntries);
         if (parts.Length < ExpectedFieldCount)
         {
-            return false;
+            return ParsedLine.Failure(
+                $"Line {lineNumber}: Expected {ExpectedFieldCount} fields, found {parts.Length}");
         }
 
         var dateStr = parts[DateIndex];
         if (!ElapsedDaysParser.TryParse(dateStr, referenceDate, out var daysSinceReference))
         {
-            return false;
+            return ParsedLine.Failure($"Line {lineNumber}: Invalid date format");
         }
 
         if (!int.TryParse(
@@ -71,28 +66,27 @@ internal sealed class CsvParser(DateTime referenceDate)
             CultureInfo.InvariantCulture,
             out var shots))
         {
-            return false;
+            return ParsedLine.Failure($"Line {lineNumber}: Invalid shots value");
         }
 
-        if (!decimal.TryParse(
+        if (!double.TryParse(
             parts[ConditionIndex],
             NumberStyles.Number,
             CultureInfo.InvariantCulture,
             out var courseCondition))
         {
-            return false;
+            return ParsedLine.Failure($"Line {lineNumber}: Invalid course condition value");
         }
 
-        if (!decimal.TryParse(
+        if (!double.TryParse(
             parts[CourseIndex],
             NumberStyles.Number,
             CultureInfo.InvariantCulture,
             out var courseMultiplier))
         {
-            return false;
+            return ParsedLine.Failure($"Line {lineNumber}: Invalid course multiplier value");
         }
 
-        round = new GolfRound(daysSinceReference, shots, courseCondition, courseMultiplier);
-        return true;
+        return ParsedLine.Success(new GolfRound(daysSinceReference, shots, courseCondition, courseMultiplier));
     }
 }

@@ -8,6 +8,11 @@ internal sealed class MultipleLinearRegression
     private const int MinimumDataPoints = 4;
     private const int NumberOfCoefficients = 4;
 
+    private const int InterceptIndex = 0;
+    private const int DaysIndex = 1;
+    private const int ConditionIndex = 2;
+    private const int CourseIndex = 3;
+
     /// <summary>
     /// Performs multiple linear regression on golf rounds to find the best-fit hyperplane.
     /// NumberOfShots = β₀ + β₁*DaysSinceReference + β₂*CourseCondition + β₃*CourseMultiplier
@@ -41,10 +46,10 @@ internal sealed class MultipleLinearRegression
 
         for (int i = 0; i < rounds.Count; i++)
         {
-            matrix[i, 0] = 1.0;
-            matrix[i, 1] = rounds[i].DaysSinceReference;
-            matrix[i, 2] = (double)rounds[i].CourseCondition;
-            matrix[i, 3] = (double)rounds[i].CourseMultiplier;
+            matrix[i, InterceptIndex] = 1.0;
+            matrix[i, DaysIndex] = rounds[i].DaysSinceReference;
+            matrix[i, ConditionIndex] = rounds[i].CourseCondition;
+            matrix[i, CourseIndex] = rounds[i].CourseMultiplier;
         }
 
         return matrix;
@@ -65,9 +70,9 @@ internal sealed class MultipleLinearRegression
     private static RegressionResult CreateRegressionResult(
         Vector<double> coefficients,
         int dataPointCount) => new(
-            coefficients[0],
-            coefficients[1],
-            coefficients[2],
-            coefficients[3],
+            coefficients[InterceptIndex],
+            coefficients[DaysIndex],
+            coefficients[ConditionIndex],
+            coefficients[CourseIndex],
             dataPointCount);
 }

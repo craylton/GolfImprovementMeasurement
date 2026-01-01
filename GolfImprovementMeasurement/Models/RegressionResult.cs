@@ -14,6 +14,14 @@ internal sealed record RegressionResult(
         $"{ConditionCoefficient:F4}*condition + " +
         $"{CourseCoefficient:F4}*course";
 
+    /// <summary>
+    /// Calculates the coefficient of determination (R²) for the regression model.
+    /// </summary>
+    /// <param name="rounds">The data points to evaluate.</param>
+    /// <returns>
+    /// R² value between 0 and 1, where 1 indicates perfect fit.
+    /// Returns 0 if <paramref name="rounds"/> is empty (no variance to explain).
+    /// </returns>
     public double CalculateRSquared(IReadOnlyList<GolfRound> rounds)
     {
         if (rounds.Count == 0)
@@ -40,11 +48,11 @@ internal sealed record RegressionResult(
             : 0;
     }
 
-    public double Predict(int daysSinceReference, decimal courseCondition, decimal courseMultiplier) =>
+    public double Predict(int daysSinceReference, double courseCondition, double courseMultiplier) =>
         Intercept +
         DaysCoefficient * daysSinceReference +
-        ConditionCoefficient * (double)courseCondition +
-        CourseCoefficient * (double)courseMultiplier;
+        ConditionCoefficient * courseCondition +
+        CourseCoefficient * courseMultiplier;
 
     public override string ToString() =>
         $"Regression Result (n={DataPointCount}):{Environment.NewLine}" +

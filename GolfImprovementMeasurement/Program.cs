@@ -9,21 +9,36 @@ Console.WriteLine(new string('=', 80));
 
 // Parse data
 var parser = new CsvParser(configuration.ReferenceDate);
-var rounds = parser.ParseFile(configuration.DataPath);
+var parseResult = parser.ParseFile(configuration.DataPath);
+
+if (parseResult.Errors.Count > 0)
+{
+    Console.Error.WriteLine($"Warning: Skipped {parseResult.Errors.Count} invalid row(s).");
+    foreach (var error in parseResult.Errors)
+    {
+        Console.Error.WriteLine($"  {error}");
+    }
+}
+
+if (parseResult.Rounds.Count == 0)
+{
+    Console.WriteLine("Error: No valid data found in CSV file.");
+    return;
+}
 
 // Fit regression plane
 var regressionService = new MultipleLinearRegression();
-var result = regressionService.FitPlane(rounds);
+var result = regressionService.FitPlane(parseResult.Rounds);
 Console.WriteLine();
 Console.WriteLine(result);
 
 // Calculate R^2 (goodness of fit)
-var rSquared = result.CalculateRSquared(rounds);
+var rSquared = result.CalculateRSquared(parseResult.Rounds);
 Console.WriteLine();
 Console.WriteLine($"  R^2 (goodness of fit) = {rSquared:F4}");
 
 // Predict sample using the most recent round
-var sampleRound = rounds[^1];
+var sampleRound = parseResult.Rounds[^1];
 var predicted = result.Predict(
     sampleRound.DaysSinceReference,
     sampleRound.CourseCondition,
